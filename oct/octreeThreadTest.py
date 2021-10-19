@@ -1,30 +1,31 @@
 # -*- encoding: utf-8 -*-
-
 import numpy as np
+from tqdm import tqdm
 
 from loader.loadData import *
 from loader.pcd2voxel import *
-from model.octreeNet import *
 from oct.octree import *
-
-MIN = 0.4
+import os
+from model.octreeNet import *
+import threading
 
 
 def backup():
-    atomses, propertieses, _ = atoms_from_file('../data', 'qm9_10000.db')
-    for i in trange(len(atomses)):
-        atoms = atomses[i]
-        properties = propertieses[i]
-        prop = np.array(list(properties.values()))[:15]
-        path = '../input32_3/{}.npz'.format(str(i + 1))
+    atomses, propertieses, datas = atoms_from_file('../data', 'qm9.db')
+    for atoms in tqdm(atomses):
         pcd = atoms2pcd(atoms)
         voxelLoader = VoxelLoader(pcd)
-        voxel = voxelLoader(sz=0.4, norm=3)
-        np.savez_compressed(path, voxel=voxel, properties=prop)
-        # data = torch.load('../inputs/{}.pth'.format(atoms.symbols))
+        trans = 'gauss'
+        voxel = voxelLoader(transformer=trans)
+        octree = Octree(voxel)
+        octree.create()
+        print(octree)
+        leaves = octree.get_leaves()
+        print(leaves)
+        print(octree.full_leaves_count())
 
 
-def main():
+def once():
     leaves_all = []
     properties_all = []
     trans = 'octree'
@@ -51,10 +52,22 @@ def main():
                 properties_all.append(properties)
     leaves_all = np.array(leaves_all)
     properties_all = np.array(properties_all)
-    # np.save('../data/qm9_{}.npz'.format(trans), leaves_all=leaves_all,
-    #         properties_all=properties_all)
+    np.save('../data/qm9_{}.npz'.format(trans), leaves_all=leaves_all,
+            properties_all=properties_all)
+
+
+def main():
+    leaves_all = []
+    properties_all = []
+    trans = 'octree'
+    for root, _, filenames in os.walk('../npz'):
+        indexes = np.arange()
+    leaves_all = np.array(leaves_all)
+    properties_all = np.array(properties_all)
+    np.save('../data/qm9_{}.npz'.format(trans), leaves_all=leaves_all,
+            properties_all=properties_all)
 
 
 if __name__ == "__main__":
-    # main()
-    backup()
+    main()
+    # backup()

@@ -1,5 +1,9 @@
 /ply/
 /data/
+/img/
 *.ply
 *.db
 *.pyc
+*.png
+*.npz
+*.log
